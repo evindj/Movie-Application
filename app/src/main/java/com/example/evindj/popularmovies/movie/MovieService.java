@@ -26,7 +26,8 @@ public  class MovieService {
     private String baseUrl ;
     private static  MovieService singleService = new MovieService();
     private MovieService(){
-        themoApiKey ="ENTER YOUR KEY HERE";
+        themoApiKey ="Enter Your API Key here";
+
         sortOrder = "popularity.desc";
         baseUrl = "http://api.themoviedb.org/3/discover/movie?";
     }
@@ -80,7 +81,10 @@ public  class MovieService {
                      movie.setPlotAnalysis(child.get("overview").getAsString());
                 else
                     movie.setPlotAnalysis("no Analysis availlable");
-                movie.setReleaseDate(child.get("release_date").getAsString());
+                if(!child.get("release_date").isJsonNull())
+                    movie.setReleaseDate(child.get("release_date").getAsString());
+                else
+                    movie.setReleaseDate("0000-00-00");
                 moviesList.add(movie);
             }
             return  moviesList;

@@ -3,6 +3,8 @@ package com.example.evindj.popularmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.example.evindj.popularmovies.dummy.DummyContent;
@@ -86,7 +89,11 @@ public class MovieListActivity extends AppCompatActivity {
         recyclerView = (RecyclerView)findViewById(R.id.movie_list);
         assert recyclerView != null;
         recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
-        new DownloadFilesTask().execute();
+        if(isConnectedToInternet())
+             new DownloadFilesTask().execute();
+        else
+            showNotification("Check your internet connection");
+
 
         if (findViewById(R.id.movie_detail_container) != null) {
             // The detail container view will be present only in the
@@ -96,10 +103,23 @@ public class MovieListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
     }
+    private void showNotification(String message){
+        Toast toast = Toast.makeText(getApplicationContext(),message,Toast.LENGTH_SHORT);
+        toast.show();
+    }
+    private boolean isConnectedToInternet(){
+        ConnectivityManager cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
+    }
     @Override
     public void onStart(){
         super.onStart();
-        new DownloadFilesTask().execute();
+        if(isConnectedToInternet())
+            new DownloadFilesTask().execute();
+        else
+            showNotification("Check your internet connection");
+
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
@@ -298,15 +318,18 @@ public class MovieListActivity extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(ArrayList<Movie> result) {
-
-            MovieContentProvider.movies= result;
-            MovieContentProvider.movieMap = new HashMap<>();
-            for(Movie m: MovieContentProvider.movies){
-                MovieContentProvider.movieMap.put(m.getId(), m);
-                //adapter.mValues.add(m);
+            if(result!=null) {
+                MovieContentProvider.movies = result;
+                MovieContentProvider.movieMap = new HashMap<>();
+                for (Movie m : MovieContentProvider.movies) {
+                    MovieContentProvider.movieMap.put(m.getId(), m);
+                    //adapter.mValues.add(m);
+                }
+                // adapter.notifyDataSetChanged();
+                recyclerView.setAdapter(new MovieItemRecyclerViewAdapter(result));
             }
-           // adapter.notifyDataSetChanged();
-            recyclerView.setAdapter( new MovieItemRecyclerViewAdapter(result));
+            else
+                showNotification("No Data returned");
         }
     }
 
