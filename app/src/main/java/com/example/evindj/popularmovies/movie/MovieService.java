@@ -25,15 +25,16 @@ public  class MovieService {
     private String sortOrder;
     private String baseUrl ;
     private static  MovieService singleService = new MovieService();
+    private String queryUrl;
     private MovieService(){
-        themoApiKey ="Enter Your API Key here";
-
+        themoApiKey ="ENTER YOUR KEY HERE";
         sortOrder = "popularity.desc";
         baseUrl = "http://api.themoviedb.org/3/discover/movie?";
     }
     private String buildUrl(){
-        return  baseUrl+"sort_by="+this.sortOrder+"&api_key="+themoApiKey;
+        return  queryUrl;
     }
+
     private String sendGet() throws IOException{
         URL url = new URL(buildUrl());
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -58,10 +59,11 @@ public  class MovieService {
         }
     }
 
+
     private ArrayList<Movie> parseJSON(String jsonString){
         JsonObject jsonObject ;
         try{
-           JsonElement jsonElement =  new JsonParser().parse(jsonString);
+            JsonElement jsonElement =  new JsonParser().parse(jsonString);
             jsonObject = jsonElement.getAsJsonObject();
             JsonArray results = jsonObject.getAsJsonArray("results");
             ArrayList<Movie> moviesList = new ArrayList<>();
@@ -75,10 +77,10 @@ public  class MovieService {
                 if(!child.get("poster_path").isJsonNull())
                     movie.setThumbnail(child.get("poster_path").getAsString());
                 else
-                    movie.setPlotAnalysis("/orH9Zw6EXeOkNoWQqUwAj28Zfz2.jpg");
+                    movie.setThumbnail("/orH9Zw6EXeOkNoWQqUwAj28Zfz2.jpg");
                 movie.setRating(child.get("vote_average").getAsInt());
                 if(!child.get("overview").isJsonNull())
-                     movie.setPlotAnalysis(child.get("overview").getAsString());
+                    movie.setPlotAnalysis(child.get("overview").getAsString());
                 else
                     movie.setPlotAnalysis("no Analysis availlable");
                 if(!child.get("release_date").isJsonNull())
@@ -101,6 +103,7 @@ public  class MovieService {
     }
 
     public  List getMovies( SortOrder sortOrder){
+        queryUrl = baseUrl+"sort_by="+this.sortOrder+"&api_key="+themoApiKey;
         if(sortOrder == SortOrder.HIGHESTRATED)
             this.sortOrder ="vote_average.desc";
         else
@@ -116,4 +119,5 @@ public  class MovieService {
             return  null;
         }
     }
+
 }

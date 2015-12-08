@@ -77,6 +77,10 @@ public class Movie implements Parcelable {
         return  "http://image.tmdb.org/t/p/w185/" + getThumbnail();
     }
 
+    public void save(){
+
+    }
+
     @Override
     public int describeContents() {
         return 0;
