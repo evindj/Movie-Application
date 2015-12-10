@@ -1,7 +1,16 @@
 package com.example.evindj.popularmovies.movie;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Parcel;
 import android.os.Parcelable;
+import com.example.evindj.popularmovies.data.*;
+import com.facebook.stetho.common.ArrayListAccumulator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -77,10 +86,38 @@ public class Movie implements Parcelable {
         return  "http://image.tmdb.org/t/p/w185/" + getThumbnail();
     }
 
-    public void save(){
+    public void save(Context context){
+        SQLiteDatabase db  = new MovieDbHelper(context).getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(MovieContract.MovieEntry.COLUMN_MOV_KEY, id);
+        values.put(MovieContract.MovieEntry.COLUMN_THUMBNAIL, thumbnail);
+        values.put(MovieContract.MovieEntry.COLUMN_MOV_PLOT, plotAnalysis);
+        values.put(MovieContract.MovieEntry.COLUMN_MOV_RAT, rating);
+        values.put(MovieContract.MovieEntry.COLUMN_MOV_TITLE, title);
+        values.put(MovieContract.MovieEntry.COLUMN_MOV_RELDATE, releaseDate);
+        db.insert(MovieContract.MovieEntry.TABLE_NAME,null,values);
 
     }
 
+    public static ArrayList<Movie> getMovies(Context context)
+    {
+        SQLiteDatabase db = new MovieDbHelper(context).getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT * FROM " + MovieContract.MovieEntry.TABLE_NAME, null);
+        ArrayList<Movie> movies = new ArrayListAccumulator<>();
+        if(c.moveToFirst()) {
+            do{
+            Movie movie = new Movie();
+            movie.setId(c.getInt(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOV_KEY)));
+            movie.setThumbnail(c.getString(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_THUMBNAIL)));
+                movie.setTitle(c.getString(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOV_TITLE)));
+                movie.setRating(c.getInt(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOV_RAT)));
+                movie.setPlotAnalysis(c.getString(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOV_PLOT)));
+                movie.setReleaseDate(c.getString(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOV_RELDATE)));
+            movies.add(movie);
+        }while(c.moveToNext());
+        }
+        return movies;
+    }
     @Override
     public int describeContents() {
         return 0;

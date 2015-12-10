@@ -88,10 +88,16 @@ public class MovieListActivity extends AppCompatActivity {
         recyclerView = (RecyclerView)findViewById(R.id.movie_list);
         assert recyclerView != null;
         recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
-        if(isConnectedToInternet())
-             new DownloadFilesTask().execute();
-        else
-            showNotification("Check your internet connection");
+        int mode = readSortPreferences();
+        if(mode != 2) {
+            if (isConnectedToInternet())
+                new DownloadFilesTask().execute();
+            else
+                showNotification("Check your internet connection");
+        }
+        else{
+                Movie.getMovies(getApplicationContext());
+        }
 
 
         if (findViewById(R.id.movie_detail_container) != null) {
@@ -106,6 +112,11 @@ public class MovieListActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(getApplicationContext(),message,Toast.LENGTH_SHORT);
         toast.show();
     }
+    private int readSortPreferences(){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String sortPref = preferences.getString("movies","0");
+        return  Integer.parseInt(sortPref);
+    }
     private boolean isConnectedToInternet(){
         ConnectivityManager cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
@@ -114,10 +125,24 @@ public class MovieListActivity extends AppCompatActivity {
     @Override
     public void onStart(){
         super.onStart();
-        if(isConnectedToInternet())
-            new DownloadFilesTask().execute();
-        else
-            showNotification("Check your internet connection");
+        int mode = readSortPreferences();
+        if(mode != 2) {
+            if (isConnectedToInternet())
+                new DownloadFilesTask().execute();
+            else
+                showNotification("Check your internet connection");
+        }
+        else{
+
+            MovieContentProvider.movies =  Movie.getMovies(getApplicationContext());
+            MovieContentProvider.movieMap = new HashMap<>();
+            for (Movie m : MovieContentProvider.movies) {
+                MovieContentProvider.movieMap.put(m.getId(), m);
+                //adapter.mValues.add(m);
+            }
+            // adapter.notifyDataSetChanged();
+            recyclerView.setAdapter(new MovieItemRecyclerViewAdapter(MovieContentProvider.movies));
+        }
 
     }
 

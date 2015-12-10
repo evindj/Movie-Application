@@ -9,6 +9,7 @@
         android:orientation="horizontal">
         <ImageView
             android:layout_width="wrap_content"
+            android:focusable="false"
             android:layout_height="wrap_content"
             android:id="@+id/imageView" />
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -20,6 +21,7 @@
                             android:id="@+id/movie_detail"
                             style="?android:attr/textAppearanceMedium"
                             android:layout_width="match_parent"
+                            android:focusable="false"
                             android:layout_height="match_parent"
                             android:padding="16dp"
                             android:textIsSelectable="true"
@@ -29,6 +31,7 @@
                         android:id="@+id/movie_date"
                         style="?android:attr/textAppearanceMedium"
                         android:layout_width="match_parent"
+                        android:focusable="false"
                         android:layout_height="match_parent"
                         android:padding="16dp"
                         android:textIsSelectable="true"
@@ -36,6 +39,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:focusable="false"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="Medium Text"
                         android:id="@+id/movie_rating" />
@@ -43,6 +47,7 @@
             <Button
                         style="?android:attr/buttonStyleSmall"
                         android:layout_width="wrap_content"
+                        android:focusable="false"
                         android:layout_height="wrap_content"
                         android:text="Add to favorite"
                         android:id="@+id/btn_favorite" />
@@ -56,6 +61,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
+        android:focusable="false"
         android:text="Medium Text"
         android:id="@+id/movie_desc" />
 
@@ -68,7 +74,6 @@
         <ListView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="false"
             android:divider="#abd8c2"
             android:dividerHeight="1dp"
             android:id="@+id/trailer_view" />
@@ -78,10 +83,5 @@
             android:id="@+id/review_view" />
     </LinearLayout>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
-    </LinearLayout>
 </LinearLayout>

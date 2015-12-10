@@ -3,8 +3,11 @@ package com.example.evindj.popularmovies;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.media.Image;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -22,6 +27,7 @@ import android.widget.Toast;
 import com.example.evindj.popularmovies.dummy.DummyContent;
 import com.example.evindj.popularmovies.movie.MovieContentProvider;
 import com.example.evindj.popularmovies.movie.*;
+import com.example.evindj.popularmovies.data.*;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -36,6 +42,7 @@ import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Inflater;
 
@@ -54,14 +61,16 @@ public class MovieDetailFragment extends Fragment  {
     public final  String  baseUrl ="http://api.themoviedb.org/3/";
 
     LayoutInflater mInflater;
-    ArrayAdapter<Review> tAdapterReview;
-    ArrayAdapter<Trailer> tAdapterTrailer;
+    ReviewsArrayAdapter tAdapterReview;
+    TrailerArrayAdapter tAdapterTrailer;
+
     /**
      * The dummy content this fragment is presenting.
      */
     private Movie movie;
     private ListView trailersView;
     private ListView reviewView;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -85,22 +94,7 @@ public class MovieDetailFragment extends Fragment  {
                     tAdapterTrailer = new TrailerArrayAdapter(getContext(),trailers.getArray());
                     trailersView.setAdapter(tAdapterTrailer);
                     setListViewSize(trailersView);
-                    trailersView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            showNotification("Click callled");
-                            Trailer trailer = (Trailer) tAdapterTrailer.getItem(position);
-                            Intent intent =  new Intent(Intent.ACTION_VIEW);
-                            intent.setData(Uri.parse("https://www.youtube.com/watch?v="+trailer.getYoutubeKey()));
-                            switch (parent.getId()){
-                                case R.id.trailer_view:
-                                    break;
-                                case R.id.review_view:
-                                    break;
-                            }
-                        }
-                    });
+                    setListener(trailersView);
                 }
 
             }
@@ -110,6 +104,25 @@ public class MovieDetailFragment extends Fragment  {
                 showNotification("Unkwon Error");
             }
         });
+    }
+    public void setListener(ListView view){
+        view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                showNotification("Click callled");
+                Trailer trailer = (Trailer) tAdapterTrailer.getItem(position);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://www.youtube.com/watch?v=" + trailer.getYoutubeKey()));
+                switch (parent.getId()) {
+                    case R.id.trailer_view:
+                        break;
+                    case R.id.review_view:
+                        break;
+                }
+            }
+        });
+
     }
     public void requestReviews(){
         RestAdapter adapter = new RestAdapter.Builder()
@@ -122,6 +135,7 @@ public class MovieDetailFragment extends Fragment  {
                 tAdapterReview = new ReviewsArrayAdapter(getContext(), reviews.getArray());
                 reviewView.setAdapter(tAdapterReview);
                 setListViewSize(reviewView);
+
             }
 
             @Override
@@ -143,7 +157,11 @@ public class MovieDetailFragment extends Fragment  {
         params.height = totalHeight + listView.getDividerHeight() *(mListAdapter.getCount()-1);
         listView.setLayoutParams(params);
     }
-
+    private int readSortPreferences(){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String sortPref = preferences.getString("movies", "0");
+        return  Integer.parseInt(sortPref);
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -176,10 +194,41 @@ public class MovieDetailFragment extends Fragment  {
             ((TextView) rootView.findViewById(R.id.movie_desc)).setText(movie.getPlotAnalysis());
             ((TextView) rootView.findViewById(R.id.movie_date)).setText(movie.getReleaseDate());
             ((TextView) rootView.findViewById(R.id.movie_rating)).setText(String.valueOf(movie.getRating()));
-            trailersView = (ListView)rootView.findViewById(R.id.trailer_view);
-            requestTrailers();
+            trailersView = (ListView) rootView.findViewById(R.id.trailer_view);
             reviewView = (ListView) rootView.findViewById(R.id.review_view);
-            requestReviews();
+            Button btnFav = (Button) rootView.findViewById(R.id.btn_favorite);
+            if(readSortPreferences() == 2){
+                btnFav.setClickable(false);
+                ArrayList<Trailer> trailers = Trailer.getTrailers(getContext(), movie.getId());
+                if(trailers!=null){
+                    tAdapterTrailer = new TrailerArrayAdapter(getContext(),trailers);
+                    trailersView.setAdapter(tAdapterTrailer);
+                    setListViewSize(trailersView);
+                    setListener(trailersView);
+                }
+                ArrayList<Review> reviews = Review.getReviews(getContext(), movie.getId());
+                tAdapterReview = new ReviewsArrayAdapter(getContext(), reviews);
+                reviewView.setAdapter(tAdapterReview);
+                setListViewSize(reviewView);
+            }
+            else {
+                requestTrailers();
+                requestReviews();
+            }
+            btnFav.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    movie.save(v.getContext());
+                    for(Trailer t:tAdapterTrailer.trailers){
+                        t.setIdMovie(movie.getId());
+                        t.save(v.getContext());
+                    }
+                    for(Review r:tAdapterReview.reviews){
+                        r.setMovieId(movie.getId());
+                        r.save(v.getContext());
+                    }
+                }
+            });
         }
 
         return rootView;
@@ -195,6 +244,7 @@ public class MovieDetailFragment extends Fragment  {
             super(context,-1,trailers);
             this.trailers = trailers;
         }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent){
 
@@ -213,7 +263,7 @@ public class MovieDetailFragment extends Fragment  {
     }
     public class ReviewsArrayAdapter extends ArrayAdapter<Review>{
         private Context context;
-        List<Review> reviews;
+        public  List<Review> reviews;
         public ReviewsArrayAdapter(Context context, List<Review> reviews){
             super(context, -1, reviews);
             this.reviews = reviews;
@@ -230,5 +280,42 @@ public class MovieDetailFragment extends Fragment  {
 
         }
 
+    }
+
+    public class TrailerCursorAdapter extends CursorAdapter{
+        public TrailerCursorAdapter(Context context, Cursor cursor, int flags){
+            super(context,cursor,0);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return LayoutInflater.from(context).inflate(R.layout.trailer_item,parent,false);
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            TextView textView = (TextView)view.findViewById(R.id.trailer_name);
+            ImageView imageView = (ImageView) view.findViewById(R.id.trailer_image);
+            textView.setText(cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.TrailerEntry.COLUMN_TRAIL_NAME)));
+            imageView.setImageResource(R.drawable.ic_action_playback_play);
+        }
+    }
+    public class ReviewCursorAdapter extends CursorAdapter{
+        public ReviewCursorAdapter(Context context, Cursor cursor, int flags){
+            super(context,cursor,0);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return LayoutInflater.from(context).inflate(R.layout.trailer_item,parent,false);
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            TextView textView = (TextView)view.findViewById(R.id.trailer_name);
+            ImageView imageView = (ImageView) view.findViewById(R.id.trailer_image);
+            textView.setText(cursor.getString(cursor.getColumnIndexOrThrow(MovieContract.ReviewEntry.COLUMN_REV_TEXT)));
+            imageView.setImageResource(R.drawable.ic_action_playback_play);
+        }
     }
 }

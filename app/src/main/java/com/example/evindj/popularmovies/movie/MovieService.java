@@ -27,7 +27,7 @@ public  class MovieService {
     private static  MovieService singleService = new MovieService();
     private String queryUrl;
     private MovieService(){
-        themoApiKey ="ENTER YOUR KEY HERE";
+        themoApiKey ="Enter your key here";
         sortOrder = "popularity.desc";
         baseUrl = "http://api.themoviedb.org/3/discover/movie?";
     }

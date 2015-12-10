@@ -53,10 +53,12 @@
     <string-array name="pref_sort_movies">
         <item>Popularity</item>
         <item>Rating</item>
+        <item>Favorite</item>
     </string-array>
     <string-array name="pref_sort_movies_values">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
     </string-array>
     <string name="pref_title_sort_movies">Sort movies by</string>
     <string name="pref_title_system_sync_settings">System sync settings</string>
