@@ -56,6 +56,7 @@ public class MovieListActivity extends AppCompatActivity {
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
+    public static int isConnected = 0;
     private boolean mTwoPane;
     RecyclerView recyclerView;
     MovieItemRecyclerViewAdapter adapter;
@@ -89,10 +90,12 @@ public class MovieListActivity extends AppCompatActivity {
         assert recyclerView != null;
         recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
         int mode = readSortPreferences();
+        if(!isConnectedToInternet()) {
+            isConnected = 2;
+            mode = 2;
+        }
         if(mode != 2) {
-            if (isConnectedToInternet())
                 new DownloadFilesTask().execute();
-            else
                 showNotification("Check your internet connection");
         }
         else{

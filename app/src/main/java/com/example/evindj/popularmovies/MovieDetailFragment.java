@@ -62,12 +62,12 @@ public class MovieDetailFragment extends Fragment  {
 
     LayoutInflater mInflater;
     ReviewsArrayAdapter tAdapterReview;
-    TrailerArrayAdapter tAdapterTrailer;
+    public static TrailerArrayAdapter tAdapterTrailer;
 
     /**
      * The dummy content this fragment is presenting.
      */
-    private Movie movie;
+    public static Movie movie;
     private ListView trailersView;
     private ListView reviewView;
 
@@ -77,6 +77,7 @@ public class MovieDetailFragment extends Fragment  {
      * fragment (e.g. upon screen orientation changes).
      */
     public MovieDetailFragment() {
+        setHasOptionsMenu(true);
     }
 
     public void requestTrailers(){
@@ -113,13 +114,10 @@ public class MovieDetailFragment extends Fragment  {
                 showNotification("Click callled");
                 Trailer trailer = (Trailer) tAdapterTrailer.getItem(position);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 intent.setData(Uri.parse("https://www.youtube.com/watch?v=" + trailer.getYoutubeKey()));
-                switch (parent.getId()) {
-                    case R.id.trailer_view:
-                        break;
-                    case R.id.review_view:
-                        break;
-                }
+                startActivity(intent);
+
             }
         });
 
@@ -197,7 +195,7 @@ public class MovieDetailFragment extends Fragment  {
             trailersView = (ListView) rootView.findViewById(R.id.trailer_view);
             reviewView = (ListView) rootView.findViewById(R.id.review_view);
             Button btnFav = (Button) rootView.findViewById(R.id.btn_favorite);
-            if(readSortPreferences() == 2){
+            if(readSortPreferences() == 2 || MovieListActivity.isConnected ==2){
                 btnFav.setClickable(false);
                 ArrayList<Trailer> trailers = Trailer.getTrailers(getContext(), movie.getId());
                 if(trailers!=null){
@@ -219,16 +217,17 @@ public class MovieDetailFragment extends Fragment  {
                 @Override
                 public void onClick(View v) {
                     movie.save(v.getContext());
-                    for(Trailer t:tAdapterTrailer.trailers){
+                    for (Trailer t : tAdapterTrailer.trailers) {
                         t.setIdMovie(movie.getId());
                         t.save(v.getContext());
                     }
-                    for(Review r:tAdapterReview.reviews){
+                    for (Review r : tAdapterReview.reviews) {
                         r.setMovieId(movie.getId());
                         r.save(v.getContext());
                     }
                 }
             });
+
         }
 
         return rootView;

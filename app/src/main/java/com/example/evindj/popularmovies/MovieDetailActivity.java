@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.View;
@@ -18,7 +20,7 @@ import android.view.MenuItem;
  * in a {@link MovieListActivity}.
  */
 public class MovieDetailActivity extends AppCompatActivity {
-
+    public static ShareActionProvider mShareActionprovider;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,7 +88,19 @@ public class MovieDetailActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.detail_movie_menu, menu);
+        MenuItem item = menu.findItem(R.id.action_share);
+        MovieDetailActivity.mShareActionprovider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        if(MovieDetailActivity.mShareActionprovider!=null)
+             MovieDetailActivity.mShareActionprovider.setShareIntent(createShareMovieIntent());
         return true;
     }
-
+    private Intent createShareMovieIntent(){
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setType("text/plain");
+        if(MovieDetailFragment.tAdapterTrailer.trailers.size()>0)
+            intent.putExtra(Intent.EXTRA_TEXT, "https://www.youtube.com/watch?v="+MovieDetailFragment.tAdapterTrailer.trailers.get(0).getYoutubeKey());
+        return  intent;
+    }
 }
